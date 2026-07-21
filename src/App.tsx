@@ -24,6 +24,7 @@ export default function App() {
   // Pedido recém-criado (dispara o modal de sucesso com o botão do WhatsApp).
   const [pedidoCriado, setPedidoCriado] = useState<{
     numero: number;
+    token: string;
     whatsappUrl: string;
   } | null>(null);
 
@@ -99,7 +100,11 @@ export default function App() {
       setModalOpen(false);
       clearCart(); // esvazia o carrinho depois de enviar
       // Guarda o pedido pra abrir o modal de sucesso com o link do WhatsApp.
-      setPedidoCriado({ numero: pedido.numero, whatsappUrl: pedido.whatsappUrl });
+      setPedidoCriado({
+        numero: pedido.numero,
+        token: pedido.token,
+        whatsappUrl: pedido.whatsappUrl,
+      });
     } catch (erro) {
       const msg =
         erro instanceof Error ? erro.message : "Não foi possível enviar o pedido.";
@@ -131,6 +136,7 @@ export default function App() {
       />
       <OrderSuccessModal
         numero={pedidoCriado?.numero ?? null}
+        token={pedidoCriado?.token ?? null}
         whatsappUrl={pedidoCriado?.whatsappUrl ?? null}
         onClose={() => setPedidoCriado(null)}
       />

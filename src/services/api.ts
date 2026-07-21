@@ -32,6 +32,9 @@ export interface CriarPedidoInput {
 export interface PedidoCriado {
   id: number;
   numero: number;
+  // Chave do link de acompanhamento (/pedido/<token>). O `numero` só serve
+  // pra exibir — ele é sequencial e não pode dar acesso ao pedido.
+  token: string;
   status: string;
   subtotal: number;
   taxaEntrega: number;
@@ -117,11 +120,11 @@ export interface PedidoPublico {
   itens: ItemPedido[];
 }
 
-// GET /pedidos/:numero (público) → status de um pedido pelo número.
+// GET /pedidos/:token (público) → status do pedido pelo token do link.
 export async function buscarPedidoPublico(
-  numero: number
+  token: string
 ): Promise<PedidoPublico> {
-  const resposta = await fetch(`${API_URL}/pedidos/${numero}`);
+  const resposta = await fetch(`${API_URL}/pedidos/${encodeURIComponent(token)}`);
 
   if (resposta.status === 404) throw new Error("Pedido não encontrado");
   if (!resposta.ok) throw new Error("Não foi possível carregar o pedido");

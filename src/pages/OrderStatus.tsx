@@ -12,16 +12,17 @@ const ETAPAS = [
 ];
 
 export default function OrderStatus() {
-  // Pega o :numero da URL (ex.: /pedido/6 → "6").
-  const { numero } = useParams<{ numero: string }>();
+  // Pega o :token da URL (ex.: /pedido/8f3a1c9e-... ). O número do pedido vem
+  // na resposta da API — a URL não o expõe.
+  const { token } = useParams<{ token: string }>();
   const [pedido, setPedido] = useState<PedidoPublico | null>(null);
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(true);
 
   const carregar = useCallback(async () => {
-    if (!numero) return;
+    if (!token) return;
     try {
-      const dados = await buscarPedidoPublico(Number(numero));
+      const dados = await buscarPedidoPublico(token);
       setPedido(dados);
       setErro("");
     } catch (err) {
@@ -29,7 +30,7 @@ export default function OrderStatus() {
     } finally {
       setCarregando(false);
     }
-  }, [numero]);
+  }, [token]);
 
   // Carrega ao abrir e atualiza a cada 10s (o cliente vê o status mudar).
   useEffect(() => {

@@ -2,17 +2,21 @@ import { Link } from "react-router-dom";
 
 interface OrderSuccessModalProps {
   numero: number | null;
+  // Token do link de acompanhamento. O número aparece na tela, mas quem dá
+  // acesso ao pedido é o token (o número é sequencial e adivinhável).
+  token: string | null;
   whatsappUrl: string | null;
   onClose: () => void;
 }
 
 export default function OrderSuccessModal({
   numero,
+  token,
   whatsappUrl,
   onClose,
 }: OrderSuccessModalProps) {
   // Só aparece quando existe um pedido recém-criado.
-  if (numero === null || whatsappUrl === null) return null;
+  if (numero === null || token === null || whatsappUrl === null) return null;
 
   return (
     <div
@@ -34,7 +38,7 @@ export default function OrderSuccessModal({
             Link (react-router) navega sem recarregar a página inteira.
             onClose zera o pedido recém-criado antes de sair da Home. */}
         <Link
-          to={`/pedido/${numero}`}
+          to={`/pedido/${token}`}
           onClick={onClose}
           className="mt-5 inline-flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-bold px-5 py-3 rounded-lg duration-200 w-full"
         >

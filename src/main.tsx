@@ -15,7 +15,9 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         {/* Painel da Val (login + dashboard) */}
         <Route path="/admin" element={<AdminPage />} />
         {/* Acompanhamento público do pedido */}
-        <Route path="/pedido/:numero" element={<OrderStatus />} />
+        {/* O parâmetro é o TOKEN do pedido, não o número: o número é
+            sequencial e permitiria abrir o pedido de qualquer pessoa. */}
+        <Route path="/pedido/:token" element={<OrderStatus />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
