@@ -8,6 +8,11 @@ import type {
   TipoEntrega,
 } from "../services/api";
 
+// Pedido mínimo da loja, em unidades somadas de todos os itens.
+// A API valida essa MESMA regra (lá é a fonte da verdade); aqui a gente só
+// avisa o cliente antes dele tentar finalizar.
+const PEDIDO_MINIMO_UNIDADES = 30;
+
 // O modal coleta tudo do pedido MENOS os itens (que vêm do carrinho).
 // Por isso reaproveitamos o tipo da API com Omit — um único ponto de verdade.
 export type DadosCheckout = Omit<CriarPedidoInput, "itens">;
@@ -42,11 +47,21 @@ export default function CartModal({
 
   if (!open) return null;
 
+  // Soma das QUANTIDADES (não do número de produtos diferentes): o mínimo é
+  // 30 unidades no total, podendo misturar (10 coxinhas + 10 esfihas + 10 ...).
+  const unidades = items.reduce((soma, it) => soma + it.qty, 0);
+  const faltam = PEDIDO_MINIMO_UNIDADES - unidades;
+  const atingiuMinimo = faltam <= 0;
+
   const handleCheckout = () => {
     const novosErros: Record<string, string> = {};
 
     if (!nome.trim()) novosErros.nome = "Informe seu nome.";
     if (telefone.trim().length < 8) novosErros.telefone = "Telefone inválido.";
+    // Mesma regra que a API valida — aqui é só pra avisar antes de enviar.
+    if (!atingiuMinimo) {
+      novosErros.minimo = `O pedido mínimo é de ${PEDIDO_MINIMO_UNIDADES} unidades.`;
+    }
     // Endereço só é obrigatório quando for ENTREGA (mesma regra do backend).
     if (tipoEntrega === "ENTREGA" && !endereco.trim()) {
       novosErros.endereco = "Endereço é obrigatório para entrega.";
@@ -135,7 +150,19 @@ export default function CartModal({
           </div>
         )}
 
-        <p className="font-bold">Total: <span>{formatCurrency(total)}</span></p>
+        <div className="flex items-center justify-between">
+          <p className="font-bold">Total: <span>{formatCurrency(total)}</span></p>
+          <p className="text-sm text-zinc-500">{unidades} unidades</p>
+        </div>
+
+        {/* Aviso do pedido mínimo: o cliente precisa saber ANTES de tentar
+            finalizar, por isso fica visível junto do total. */}
+        {items.length > 0 && !atingiuMinimo && (
+          <p className="mt-2 text-sm bg-amber-50 text-amber-800 border border-amber-200 rounded p-2">
+            Pedido mínimo de {PEDIDO_MINIMO_UNIDADES} unidades — faltam{" "}
+            <strong>{faltam}</strong>. Pode misturar os salgados que quiser!
+          </p>
+        )}
 
         {/* Dados do cliente */}
         <p className="font-bold mt-4">Seu nome:</p>
@@ -246,7 +273,7 @@ export default function CartModal({
           <button onClick={onClose}>Fechar</button>
           <button
             onClick={handleCheckout}
-            disabled={items.length === 0}
+            disabled={items.length === 0 || !atingiuMinimo}
             className="bg-green-500 hover:bg-green-600 disabled:opacity-40 disabled:cursor-not-allowed text-white px-4 py-1 rounded duration-200"
           >
             Finalizar Pedido
