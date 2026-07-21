@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm -v)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(cd \"/c/Users/Cauã/Desktop/valsalgadosOficial\" && echo \"=== conteudo de valsalgadosOficial ===\" && ls -la && echo \"\" && echo \"=== procurando val-salgados-api ===\" && find . -maxdepth 2 -type d -name \"*api*\" 2>/dev/null)",
+      "Bash(npx prisma *)",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(curl -s -X POST http://localhost:3000/pedidos -H \"Content-Type: application/json\" -d '{\"clienteNome\":\"Cauã\",\"telefone\":\"15999998888\",\"tipoEntrega\":\"RETIRADA\",\"formaPagamento\":\"DINHEIRO\",\"trocoPara\":50,\"itens\":[{\"nome\":\"Coxinha c/ Catupiry\",\"quantidade\":2,\"precoUnitario\":7}]}')",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\).on\\('end',\\(\\)=>{const p=JSON.parse\\(d\\);console.log\\(JSON.stringify\\({numero:p.numero,tipoEntrega:p.tipoEntrega,endereco:p.endereco,formaPagamento:p.formaPagamento,trocoPara:p.trocoPara,taxaEntrega:p.taxaEntrega,total:p.total,itens:p.itens?.length},null,0\\)\\)}\\)\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" -X POST http://localhost:3000/pedidos -H \"Content-Type: application/json\" -d '{\"clienteNome\":\"Cauã\",\"telefone\":\"15999998888\",\"tipoEntrega\":\"ENTREGA\",\"formaPagamento\":\"PIX\",\"itens\":[{\"nome\":\"Coxinha\",\"quantidade\":1,\"precoUnitario\":7}]}')",
+      "Bash(curl -s -X POST http://localhost:3000/pedidos -H \"Content-Type: application/json\" -d '{\"clienteNome\":\"Cauã\",\"telefone\":\"15999998888\",\"tipoEntrega\":\"RETIRADA\",\"formaPagamento\":\"PIX\",\"trocoPara\":50,\"itens\":[{\"nome\":\"Coxinha\",\"quantidade\":1,\"precoUnitario\":7}]}')",
+      "Bash(kill %1)",
+      "Bash(pkill -f \"tsx watch\")",
+      "Bash(curl -s -X POST http://localhost:3000/pedidos -H \"Content-Type: application/json\" -d '{\"clienteNome\":\"Maria\",\"telefone\":\"15988887777\",\"tipoEntrega\":\"ENTREGA\",\"endereco\":\"Rua das Flores, 123\",\"formaPagamento\":\"PIX\",\"itens\":[{\"nome\":\"Empada de Frango\",\"quantidade\":2,\"precoUnitario\":8},{\"nome\":\"Coxinha c/ Catupiry\",\"quantidade\":1,\"precoUnitario\":7}]}')",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\).on\\('end',\\(\\)=>{const p=JSON.parse\\(d\\);const u=new URL\\(p.whatsappUrl\\);console.log\\('numero:',p.numero\\);console.log\\('host:',u.host,'| destino:',u.pathname\\);console.log\\('--- mensagem decodificada ---'\\);console.log\\(decodeURIComponent\\(u.searchParams.get\\('text'\\)\\)\\)}\\)\")",
+      "Bash(curl -s -X POST http://localhost:3000/pedidos -H \"Content-Type: application/json\" -d '{\"clienteNome\":\"João\",\"telefone\":\"15977776666\",\"tipoEntrega\":\"RETIRADA\",\"formaPagamento\":\"DINHEIRO\",\"trocoPara\":50,\"itens\":[{\"nome\":\"Bolinho de Queijo\",\"quantidade\":3,\"precoUnitario\":5.5}]}')",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\).on\\('end',\\(\\)=>{const p=JSON.parse\\(d\\);const u=new URL\\(p.whatsappUrl\\);console.log\\('--- mensagem decodificada ---'\\);console.log\\(decodeURIComponent\\(u.searchParams.get\\('text'\\)\\)\\)}\\)\")",
+      "Bash(pkill -f \"tsx\")",
+      "Bash(curl -s -o /dev/null -w \"API health: HTTP %{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(curl -s http://localhost:3000/pedidos/6)",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\).on\\('end',\\(\\)=>{const p=JSON.parse\\(d\\);console.log\\('campos retornados:', Object.keys\\(p\\).join\\(', '\\)\\);console.log\\('tem telefone?', 'telefone' in p, '| tem endereco?', 'endereco' in p, '| tem trocoPara?', 'trocoPara' in p\\);console.log\\('numero:',p.numero,'status:',p.status\\)}\\)\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:3000/pedidos/9999)",
+      "Bash(node -e ' *)",
+      "Bash(curl -s -o /dev/null -w \"API: HTTP %{http_code}\\\\n\" http://localhost:3000/)",
+      "Read(//tmp/**)",
+      "Bash(docker run *)",
+      "Bash(curl -s -w \"\\\\nHTTP %{http_code}\\\\n\" http://localhost:3001/)",
+      "Bash(docker rm *)",
+      "Bash(npm test *)",
+      "Bash(docker build *)",
+      "Bash(docker rmi *)",
+      "Bash(echo \"typecheck OK \\(exit $?\\)\")",
+      "mcp__visualize__read_me",
+      "Skill(artifact-design)",
+      "Skill(artifact-design:*)"
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      # O script "build" já roda "tsc --noEmit && vite build":
+      # checa os tipos E garante que o projeto compila de verdade.
+      - name: Checar tipos e buildar
+        run: npm run build
