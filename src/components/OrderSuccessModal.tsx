@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 interface OrderSuccessModalProps {
   numero: number | null;
   whatsappUrl: string | null;
@@ -22,21 +24,35 @@ export default function OrderSuccessModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="text-5xl mb-2">✅</div>
-        <h2 className="font-bold text-2xl">Pedido #{numero} criado!</h2>
+        <h2 className="font-bold text-2xl">Pedido #{numero} confirmado!</h2>
         <p className="text-zinc-600 mt-2">
-          Falta um passo: envie o pedido pra gente pelo WhatsApp pra confirmar.
+          Seu pedido foi registrado. Acompanhe o preparo pelo link abaixo — ele é
+          só seu, pode salvar pra ver o status quando quiser.
         </p>
 
-        {/* <a> em vez de window.open: clique = gesto real do usuário, não é
-            bloqueado como popup. target/rel: abre em nova aba com segurança. */}
+        {/* Confirmação do CLIENTE: link pessoal pra acompanhar o pedido.
+            Link (react-router) navega sem recarregar a página inteira.
+            onClose zera o pedido recém-criado antes de sair da Home. */}
+        <Link
+          to={`/pedido/${numero}`}
+          onClick={onClose}
+          className="mt-5 inline-flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-bold px-5 py-3 rounded-lg duration-200 w-full"
+        >
+          <i className="fa fa-location-arrow text-lg" />
+          Acompanhar meu pedido
+        </Link>
+
+        {/* Caminho INVERSO: é assim que a LOJA recebe o pedido. O cliente
+            precisa tocar em "enviar" no WhatsApp (regra da plataforma).
+            <a> em vez de window.open: clique = gesto real, não é bloqueado. */}
         <a
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-5 inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-5 py-3 rounded-lg duration-200 w-full"
+          className="mt-3 inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-5 py-3 rounded-lg duration-200 w-full"
         >
           <i className="fa-brands fa-whatsapp text-xl" />
-          Enviar pelo WhatsApp
+          Enviar o pedido pra loja no WhatsApp
         </a>
 
         <button
