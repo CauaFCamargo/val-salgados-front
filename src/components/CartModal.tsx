@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { formatCurrency } from "../utils/format";
+import { formatCurrency, formatarTelefone, telefoneValido } from "../utils/format";
 import type { CartItem } from "../types";
 // Os tipos de pagamento/entrega moram no serviço da API (fonte única).
 import type {
@@ -12,6 +12,9 @@ import type {
 // A API valida essa MESMA regra (lá é a fonte da verdade); aqui a gente só
 // avisa o cliente antes dele tentar finalizar.
 const PEDIDO_MINIMO_UNIDADES = 30;
+
+// Limite do nome do cliente. A API valida o mesmo máximo.
+const NOME_MAXIMO = 30;
 
 // O modal coleta tudo do pedido MENOS os itens (que vêm do carrinho).
 // Por isso reaproveitamos o tipo da API com Omit — um único ponto de verdade.
@@ -57,7 +60,9 @@ export default function CartModal({
     const novosErros: Record<string, string> = {};
 
     if (!nome.trim()) novosErros.nome = "Informe seu nome.";
-    if (telefone.trim().length < 8) novosErros.telefone = "Telefone inválido.";
+    if (!telefoneValido(telefone)) {
+      novosErros.telefone = "Informe um telefone com DDD (ex.: (15) 99851-2564).";
+    }
     // Mesma regra que a API valida — aqui é só pra avisar antes de enviar.
     if (!atingiuMinimo) {
       novosErros.minimo = `O pedido mínimo é de ${PEDIDO_MINIMO_UNIDADES} unidades.`;
@@ -166,20 +171,26 @@ export default function CartModal({
 
         {/* Dados do cliente */}
         <p className="font-bold mt-4">Seu nome:</p>
+        {/* maxLength corta no próprio campo: a pessoa não consegue passar de 30. */}
         <input
           type="text"
           value={nome}
-          onChange={(e) => setNome(e.target.value)}
+          maxLength={NOME_MAXIMO}
+          onChange={(e) => setNome(e.target.value.slice(0, NOME_MAXIMO))}
           placeholder="Como podemos te chamar?"
           className="w-full border-2 p-1 rounded my-1 outline-none focus:border-green-600"
         />
         {erros.nome && <p className="text-red-500 text-sm">{erros.nome}</p>}
 
         <p className="font-bold mt-2">Telefone / WhatsApp:</p>
+        {/* A máscara roda a cada tecla: descarta letras/símbolos e trava em 11
+            dígitos, então não dá pra digitar um telefone maior que o real.
+            inputMode="numeric" abre o teclado numérico no celular. */}
         <input
           type="tel"
+          inputMode="numeric"
           value={telefone}
-          onChange={(e) => setTelefone(e.target.value)}
+          onChange={(e) => setTelefone(formatarTelefone(e.target.value))}
           placeholder="(15) 99999-8888"
           className="w-full border-2 p-1 rounded my-1 outline-none focus:border-green-600"
         />
