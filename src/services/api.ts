@@ -85,6 +85,9 @@ export interface Pedido {
   desconto: number;
   total: number;
   status: string;
+  // O agente de impressão local marca como true depois de imprimir o cupom.
+  // O painel pode voltar pra false pra o agente imprimir de novo.
+  impresso: boolean;
   itens: ItemPedido[];
 }
 
@@ -165,6 +168,29 @@ export async function atualizarStatus(
 
   if (resposta.status === 401) throw new SessaoExpiradaError();
   if (!resposta.ok) throw new Error("Não foi possível atualizar o status");
+
+  return resposta.json();
+}
+
+// Marca/desmarca o pedido como impresso.
+// `impresso: false` devolve o pedido pra fila do agente de impressão local,
+// que roda na máquina da loja e imprime os pedidos ainda não impressos.
+export async function definirImpresso(
+  token: string,
+  id: number,
+  impresso: boolean
+): Promise<{ id: number; impresso: boolean }> {
+  const resposta = await fetch(`${API_URL}/pedidos/${id}/impresso`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ impresso }),
+  });
+
+  if (resposta.status === 401) throw new SessaoExpiradaError();
+  if (!resposta.ok) throw new Error("Não foi possível atualizar a impressão");
 
   return resposta.json();
 }

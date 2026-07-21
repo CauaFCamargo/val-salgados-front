@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   listarPedidos,
   atualizarStatus,
+  definirImpresso,
   SessaoExpiradaError,
   type Pedido,
 } from "../services/api";
@@ -29,6 +30,9 @@ const STATUS_INFO: Record<string, { label: string; cor: string }> = {
   CANCELADO: { label: "Cancelado", cor: "bg-red-100 text-red-700" },
 };
 
+// Status que ainda exigem ação da Val (aparecem no card "Pendentes").
+const PENDENTES = ["RECEBIDO", "EM_PRODUCAO"];
+
 function formatarHora(iso: string): string {
   return new Date(iso).toLocaleString("pt-BR", {
     day: "2-digit",
@@ -38,10 +42,23 @@ function formatarHora(iso: string): string {
   });
 }
 
+// Converte uma data ISO no "dia" dela (YYYY-MM-DD) no fuso LOCAL.
+// Cuidado importante: usar toISOString() aqui daria o dia em UTC, e um pedido
+// feito às 21h no Brasil cairia no dia seguinte. Por isso montamos na mão.
+function diaLocal(data: Date): string {
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, "0");
+  const dia = String(data.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
+
 export default function AdminDashboard({ token, onLogout }: AdminDashboardProps) {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(true);
+  // Filtro de data: começa no dia de hoje. `verTodos` ignora o filtro.
+  const [dia, setDia] = useState(() => diaLocal(new Date()));
+  const [verTodos, setVerTodos] = useState(false);
 
   // useCallback pra a função não ser recriada a cada render (o useEffect depende dela).
   const carregar = useCallback(async () => {
@@ -65,6 +82,28 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
     return () => clearInterval(timer);
   }, [carregar]);
 
+  // Lista já filtrada pelo dia escolhido. useMemo evita refazer o filtro a
+  // cada render — só recalcula quando os pedidos ou o filtro mudam.
+  const visiveis = useMemo(() => {
+    if (verTodos) return pedidos;
+    return pedidos.filter((p) => diaLocal(new Date(p.criadoEm)) === dia);
+  }, [pedidos, dia, verTodos]);
+
+  // Os números do topo, calculados sempre em cima do que está visível.
+  const resumo = useMemo(() => {
+    // Cancelado não conta como faturamento (o dinheiro não entrou).
+    const faturamento = visiveis
+      .filter((p) => p.status !== "CANCELADO")
+      .reduce((soma, p) => soma + p.total, 0);
+
+    return {
+      quantidade: visiveis.length,
+      faturamento,
+      pendentes: visiveis.filter((p) => PENDENTES.includes(p.status)).length,
+      naoImpressos: visiveis.filter((p) => !p.impresso).length,
+    };
+  }, [visiveis]);
+
   const mudarStatus = async (pedido: Pedido, novoStatus: string) => {
     try {
       const atualizado = await atualizarStatus(token, pedido.id, novoStatus);
@@ -78,37 +117,117 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
     }
   };
 
+  // "Reimprimir" não imprime daqui: o navegador não enxerga a impressora da
+  // loja. A gente só devolve o pedido pra fila (impresso = false) e o agente
+  // local, que fica consultando a API, imprime no próximo ciclo.
+  const reimprimir = async (pedido: Pedido) => {
+    try {
+      await definirImpresso(token, pedido.id, false);
+      setPedidos((prev) =>
+        prev.map((p) => (p.id === pedido.id ? { ...p, impresso: false } : p))
+      );
+    } catch (err) {
+      if (err instanceof SessaoExpiradaError) onLogout();
+      else setErro("Não foi possível enviar o pedido pra impressão.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-zinc-100">
       <header className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="font-bold text-xl">Pedidos</h1>
-            <p className="text-sm text-zinc-500">
-              {pedidos.length} no total · atualiza sozinho
-            </p>
+        <div className="max-w-3xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="font-bold text-xl">Painel de pedidos</h1>
+              <p className="text-sm text-zinc-500">
+                {pedidos.length} no total · atualiza sozinho
+              </p>
+            </div>
+            <button
+              onClick={onLogout}
+              className="text-sm border-2 border-zinc-200 hover:border-zinc-300 rounded px-3 py-1.5 duration-200"
+            >
+              Sair
+            </button>
           </div>
-          <button
-            onClick={onLogout}
-            className="text-sm border-2 border-zinc-200 hover:border-zinc-300 rounded px-3 py-1.5 duration-200"
-          >
-            Sair
-          </button>
+
+          {/* Filtro por dia */}
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            <label htmlFor="filtro-dia" className="text-sm text-zinc-600">
+              Dia:
+            </label>
+            <input
+              id="filtro-dia"
+              type="date"
+              value={dia}
+              disabled={verTodos}
+              onChange={(e) => setDia(e.target.value)}
+              className="border-2 border-zinc-200 rounded px-2 py-1 text-sm disabled:opacity-50"
+            />
+            <button
+              onClick={() => {
+                setDia(diaLocal(new Date()));
+                setVerTodos(false);
+              }}
+              className="text-sm border-2 border-zinc-200 hover:border-zinc-300 rounded px-3 py-1 duration-200"
+            >
+              Hoje
+            </button>
+            <button
+              onClick={() => setVerTodos((v) => !v)}
+              className={
+                "text-sm rounded px-3 py-1 duration-200 border-2 " +
+                (verTodos
+                  ? "bg-gray-900 border-gray-900 text-white"
+                  : "border-zinc-200 hover:border-zinc-300")
+              }
+            >
+              Todos os dias
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-5">
         {erro && <p className="text-red-500 mb-4">{erro}</p>}
 
+        {/* Cards de resumo — sempre sobre o período selecionado */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+          <div className="bg-white rounded-lg shadow-sm p-3">
+            <p className="text-xs text-zinc-500">Pedidos</p>
+            <p className="font-bold text-2xl">{resumo.quantidade}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow-sm p-3">
+            <p className="text-xs text-zinc-500">Faturamento</p>
+            <p className="font-bold text-2xl text-green-700">
+              {formatCurrency(resumo.faturamento)}
+            </p>
+          </div>
+          <div className="bg-white rounded-lg shadow-sm p-3">
+            <p className="text-xs text-zinc-500">Pendentes</p>
+            <p className="font-bold text-2xl text-amber-600">
+              {resumo.pendentes}
+            </p>
+          </div>
+          <div className="bg-white rounded-lg shadow-sm p-3">
+            <p className="text-xs text-zinc-500">Não impressos</p>
+            <p className="font-bold text-2xl text-blue-700">
+              {resumo.naoImpressos}
+            </p>
+          </div>
+        </div>
+
         {carregando ? (
           <p className="text-zinc-500 text-center py-10">Carregando...</p>
-        ) : pedidos.length === 0 ? (
+        ) : visiveis.length === 0 ? (
           <p className="text-zinc-500 text-center py-10">
-            Nenhum pedido ainda. Assim que um cliente enviar, aparece aqui.
+            {verTodos
+              ? "Nenhum pedido ainda. Assim que um cliente enviar, aparece aqui."
+              : "Nenhum pedido nesse dia. Troque a data ou veja todos os dias."}
           </p>
         ) : (
           <div className="flex flex-col gap-3">
-            {pedidos.map((pedido) => {
+            {visiveis.map((pedido) => {
               const info = STATUS_INFO[pedido.status] ?? {
                 label: pedido.status,
                 cor: "bg-zinc-100 text-zinc-600",
@@ -129,11 +248,29 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                         {formatarHora(pedido.criadoEm)}
                       </span>
                     </div>
-                    <span
-                      className={`text-xs font-medium px-2 py-1 rounded-full ${info.cor}`}
-                    >
-                      {info.label}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {/* Estado da impressão: quem imprime é o agente local. */}
+                      <span
+                        className={
+                          "text-xs font-medium px-2 py-1 rounded-full " +
+                          (pedido.impresso
+                            ? "bg-zinc-100 text-zinc-500"
+                            : "bg-blue-100 text-blue-700")
+                        }
+                        title={
+                          pedido.impresso
+                            ? "Cupom já impresso"
+                            : "Na fila do agente de impressão"
+                        }
+                      >
+                        🖨️ {pedido.impresso ? "Impresso" : "Na fila"}
+                      </span>
+                      <span
+                        className={`text-xs font-medium px-2 py-1 rounded-full ${info.cor}`}
+                      >
+                        {info.label}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="mt-2 text-sm">
@@ -173,24 +310,35 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                     <span className="font-bold">
                       Total: {formatCurrency(pedido.total)}
                     </span>
-                    {!finalizado && (
-                      <div className="flex gap-2">
+                    <div className="flex gap-2">
+                      {/* Só faz sentido reenviar pra fila o que já foi impresso. */}
+                      {pedido.impresso && (
                         <button
-                          onClick={() => mudarStatus(pedido, "CANCELADO")}
-                          className="text-sm text-red-600 hover:bg-red-50 rounded px-3 py-1.5 duration-200"
+                          onClick={() => reimprimir(pedido)}
+                          className="text-sm border-2 border-zinc-200 hover:border-zinc-300 rounded px-3 py-1.5 duration-200"
                         >
-                          Cancelar
+                          🖨️ Reimprimir
                         </button>
-                        {proximo && (
+                      )}
+                      {!finalizado && (
+                        <>
                           <button
-                            onClick={() => mudarStatus(pedido, proximo)}
-                            className="text-sm bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1.5 duration-200"
+                            onClick={() => mudarStatus(pedido, "CANCELADO")}
+                            className="text-sm text-red-600 hover:bg-red-50 rounded px-3 py-1.5 duration-200"
                           >
-                            Avançar → {STATUS_INFO[proximo].label}
+                            Cancelar
                           </button>
-                        )}
-                      </div>
-                    )}
+                          {proximo && (
+                            <button
+                              onClick={() => mudarStatus(pedido, proximo)}
+                              className="text-sm bg-green-600 hover:bg-green-700 text-white rounded px-3 py-1.5 duration-200"
+                            >
+                              Avançar → {STATUS_INFO[proximo].label}
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
