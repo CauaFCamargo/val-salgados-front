@@ -3,10 +3,34 @@
 // Coloque os arquivos em src/assets/ com estes nomes. Para adicionar uma nova
 // foto: (1) importe aqui em cima, (2) use no campo `image` do produto.
 // Produtos sem foto usam `emoji` como reserva temporária.
+//
+// As fotos abaixo (exceto empadas/coxinha originais) são ilustrativas, de bancos
+// de licença livre (Pexels — uso livre, sem atribuição). Troque pelas fotos reais
+// da Val quando disponíveis.
 // -----------------------------------------------------------------------------
 import empadaFrango from "../assets/empadinhadefrango.png";
 import empadaPalmito from "../assets/empadinhapalmito.png";
 import coxinha from "../assets/coxinha.png";
+import baguetePresunto from "../assets/baguete-presunto.jpg";
+import bagueteFrango from "../assets/baguete-frango.jpg";
+import burguerCheddar from "../assets/burguer-cheddar.jpg";
+import burguerQueijo from "../assets/burguer-queijo.jpg";
+import valDog from "../assets/val-dog.jpg";
+import bauru from "../assets/bauru.jpg";
+import esfihaFrango from "../assets/esfiha-frango.jpg";
+import esfihaCarne from "../assets/esfiha-carne.jpg";
+import trouxinhaCalabresa from "../assets/trouxinha-calabresa.jpg";
+import trouxinhaQueijos from "../assets/trouxinha-queijos.jpg";
+import paoPizzaAberto from "../assets/pao-pizza-aberto.jpg";
+import paoPizzaFrango from "../assets/pao-pizza-frango.jpg";
+import pastelaoCalabresa from "../assets/pastelao-calabresa.jpg";
+import pastelaoFrango from "../assets/pastelao-frango.jpg";
+import pastelaoPresunto from "../assets/pastelao-presunto.jpg";
+import coxinhaSimples from "../assets/coxinha-simples.jpg";
+import risolis from "../assets/risolis.jpg";
+import bolinhoQueijo from "../assets/bolinho-queijo.jpg";
+import bolinhoOvo from "../assets/bolinho-ovo.jpg";
+import bolinhoCarne from "../assets/bolinho-carne.jpg";
 import type { Product } from "../types";
 
 // Cada produto tem um `id` estável (bom para keys do React e para o backend depois).
@@ -35,7 +59,7 @@ export const PRODUCTS: Product[] = [
     name: "Baguete Presunto e Queijo",
     category: "baguetes",
     price: 12.0,
-    emoji: "🥖",
+    image: baguetePresunto,
     description: "Baguete crocante com presunto e queijo derretido.",
   },
   {
@@ -43,7 +67,7 @@ export const PRODUCTS: Product[] = [
     name: "Baguete de Frango c/ Cheddar",
     category: "baguetes",
     price: 13.0,
-    emoji: "🥖",
+    image: bagueteFrango,
     description: "Frango desfiado com cheddar cremoso na baguete tostada.",
   },
 
@@ -53,7 +77,7 @@ export const PRODUCTS: Product[] = [
     name: "Val Burguer com Cheddar",
     category: "lanches",
     price: 16.0,
-    emoji: "🍔",
+    image: burguerCheddar,
     description: "Hambúrguer artesanal com cheddar e pão macio.",
   },
   {
@@ -61,7 +85,7 @@ export const PRODUCTS: Product[] = [
     name: "Val Burguer com Queijo",
     category: "lanches",
     price: 15.0,
-    emoji: "🍔",
+    image: burguerQueijo,
     description: "Hambúrguer artesanal com queijo prato derretido.",
   },
   {
@@ -69,7 +93,7 @@ export const PRODUCTS: Product[] = [
     name: "Val Dog com Queijo",
     category: "lanches",
     price: 12.0,
-    emoji: "🌭",
+    image: valDog,
     description: "Salsicha, queijo, molho e batata palha no pão macio.",
   },
   {
@@ -77,7 +101,7 @@ export const PRODUCTS: Product[] = [
     name: "Bauru Presunto/Queijo Fatiado",
     category: "lanches",
     price: 13.0,
-    emoji: "🥪",
+    image: bauru,
     description: "Presunto e queijo fatiado com tomate no pão francês.",
   },
 
@@ -87,7 +111,7 @@ export const PRODUCTS: Product[] = [
     name: "Esfiha Frango com Catupiry",
     category: "esfihas",
     price: 7.0,
-    emoji: "🫓",
+    image: esfihaFrango,
     description: "Esfiha assada de frango com catupiry cremoso.",
   },
   {
@@ -95,7 +119,7 @@ export const PRODUCTS: Product[] = [
     name: "Esfiha de Carne Crua",
     category: "esfihas",
     price: 7.0,
-    emoji: "🫓",
+    image: esfihaCarne,
     description: "Esfiha aberta de carne temperada estilo tradicional.",
   },
 
@@ -105,7 +129,7 @@ export const PRODUCTS: Product[] = [
     name: "Trouxinhas de Calabr. c/ Queijo",
     category: "trouxinhas",
     price: 6.5,
-    emoji: "🧆",
+    image: trouxinhaCalabresa,
     description: "Massa fininha recheada com calabresa e queijo.",
   },
   {
@@ -113,7 +137,7 @@ export const PRODUCTS: Product[] = [
     name: "Trouxinhas Queijos",
     category: "trouxinhas",
     price: 6.0,
-    emoji: "🧆",
+    image: trouxinhaQueijos,
     description: "Massa fininha recheada com mistura de queijos.",
   },
 
@@ -123,7 +147,7 @@ export const PRODUCTS: Product[] = [
     name: "Pão de Pizza Aberto",
     category: "pao-pizza",
     price: 9.0,
-    emoji: "🍕",
+    image: paoPizzaAberto,
     description: "Pão macio coberto com molho, queijo e orégano.",
   },
   {
@@ -131,7 +155,7 @@ export const PRODUCTS: Product[] = [
     name: "Pão de Pizza Frango",
     category: "pao-pizza",
     price: 9.5,
-    emoji: "🍕",
+    image: paoPizzaFrango,
     description: "Pão de pizza recheado com frango e queijo.",
   },
 
@@ -141,7 +165,7 @@ export const PRODUCTS: Product[] = [
     name: "Pastelão de Calabresa c/ Cheddar",
     category: "pasteloes",
     price: 10.0,
-    emoji: "🥟",
+    image: pastelaoCalabresa,
     description: "Pastelão grande com calabresa e cheddar.",
   },
   {
@@ -149,7 +173,7 @@ export const PRODUCTS: Product[] = [
     name: "Pastelão de Frango c/ Catupiry",
     category: "pasteloes",
     price: 10.0,
-    emoji: "🥟",
+    image: pastelaoFrango,
     description: "Pastelão grande de frango com catupiry.",
   },
   {
@@ -157,7 +181,7 @@ export const PRODUCTS: Product[] = [
     name: "Pastelão de Presunto e Queijo",
     category: "pasteloes",
     price: 9.5,
-    emoji: "🥟",
+    image: pastelaoPresunto,
     description: "Pastelão grande com presunto e queijo.",
   },
 
@@ -175,7 +199,7 @@ export const PRODUCTS: Product[] = [
     name: "Coxinha Simples/Marguerita",
     category: "fritos",
     price: 6.0,
-    emoji: "🍗",
+    image: coxinhaSimples,
     description: "Coxinha tradicional de frango, sequinha e crocante.",
   },
   {
@@ -183,7 +207,7 @@ export const PRODUCTS: Product[] = [
     name: "Risólis Presunto/Queijo",
     category: "fritos",
     price: 6.0,
-    emoji: "🥟",
+    image: risolis,
     description: "Risoles crocante de presunto e queijo.",
   },
   {
@@ -191,7 +215,7 @@ export const PRODUCTS: Product[] = [
     name: "Bolinho de Queijo",
     category: "fritos",
     price: 5.5,
-    emoji: "🧀",
+    image: bolinhoQueijo,
     description: "Bolinho frito recheado com queijo derretido.",
   },
   {
@@ -199,7 +223,7 @@ export const PRODUCTS: Product[] = [
     name: "Bolinho de Ovo c/ Carne Moída",
     category: "fritos",
     price: 6.5,
-    emoji: "🥚",
+    image: bolinhoOvo,
     description: "Bolinho de ovo com carne moída temperada.",
   },
   {
@@ -207,7 +231,7 @@ export const PRODUCTS: Product[] = [
     name: "Bolinho de Carne",
     category: "fritos",
     price: 6.0,
-    emoji: "🥩",
+    image: bolinhoCarne,
     description: "Bolinho frito recheado com carne temperada.",
   },
 ];
