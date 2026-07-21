@@ -29,3 +29,15 @@ export const telefoneValido = (valor: string): boolean => {
   const n = apenasDigitos(valor).length;
   return n === 10 || n === 11;
 };
+
+// Máscara de CEP: 18103000 -> "18103-000". Corta em 8 dígitos, então não dá
+// pra digitar um CEP maior que o real.
+export function formatarCep(valor: string): string {
+  const d = apenasDigitos(valor).slice(0, 8);
+  if (d.length <= 5) return d;
+  return `${d.slice(0, 5)}-${d.slice(5)}`;
+}
+
+// CEP brasileiro tem exatamente 8 dígitos.
+export const cepValido = (valor: string): boolean =>
+  apenasDigitos(valor).length === 8;

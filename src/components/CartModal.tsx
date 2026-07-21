@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { formatCurrency, formatarTelefone, telefoneValido } from "../utils/format";
+import {
+  formatCurrency,
+  formatarTelefone,
+  telefoneValido,
+  formatarCep,
+  cepValido,
+} from "../utils/format";
 import type { CartItem } from "../types";
 // Os tipos de pagamento/entrega moram no serviço da API (fonte única).
 import type {
@@ -30,6 +36,9 @@ interface CartModalProps {
   onCheckout: (dados: DadosCheckout) => void;
 }
 
+// Asterisco vermelho reaproveitado nos rótulos dos campos obrigatórios.
+const Obrigatorio = () => <span className="text-red-500">*</span>;
+
 export default function CartModal({
   open,
   items,
@@ -42,6 +51,7 @@ export default function CartModal({
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
   const [tipoEntrega, setTipoEntrega] = useState<TipoEntrega>("ENTREGA");
+  const [cep, setCep] = useState("");
   const [endereco, setEndereco] = useState(""); // rua / logradouro
   const [numeroEndereco, setNumeroEndereco] = useState("");
   const [bairro, setBairro] = useState("");
@@ -74,9 +84,10 @@ export default function CartModal({
       novosErros.minimo = `O pedido mínimo é de ${PEDIDO_MINIMO_UNIDADES} unidades.`;
     }
     // Endereço só é obrigatório quando for ENTREGA (mesma regra do backend).
-    // Na entrega, cada campo do endereço tem seu próprio erro — assim a pessoa
-    // vê exatamente o que faltou em vez de um aviso genérico.
+    // Cada campo tem seu próprio erro — assim a pessoa vê exatamente o que
+    // faltou em vez de um aviso genérico. Complemento é o único opcional.
     if (tipoEntrega === "ENTREGA") {
+      if (!cepValido(cep)) novosErros.cep = "Informe um CEP com 8 dígitos.";
       if (!endereco.trim()) novosErros.endereco = "Informe a rua.";
       if (!numeroEndereco.trim()) novosErros.numeroEndereco = "Informe o número.";
       if (!bairro.trim()) novosErros.bairro = "Informe o bairro.";
@@ -102,6 +113,7 @@ export default function CartModal({
       // Na retirada nada de endereço é enviado.
       ...(tipoEntrega === "ENTREGA"
         ? {
+            cep: cep.trim(),
             endereco: endereco.trim(),
             numeroEndereco: numeroEndereco.trim(),
             bairro: bairro.trim(),
@@ -115,8 +127,8 @@ export default function CartModal({
     });
   };
 
-  // Estilo repetido dos campos de endereço, num lugar só.
-  const campoEndereco =
+  // Estilo repetido dos campos de texto, num lugar só.
+  const campo =
     "w-full border-2 p-1 rounded my-1 outline-none focus:border-green-600";
 
   // Botão de um seletor "segmentado" (Entrega/Retirada, PIX/Dinheiro).
@@ -140,10 +152,149 @@ export default function CartModal({
         className="bg-white p-5 rounded-md w-full max-w-xl max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-center font-bold text-2xl mb-2">Meu carrinho</h2>
+        <h2 className="text-center font-bold text-2xl mb-1">Meu carrinho</h2>
+        <p className="text-center text-xs text-zinc-500 mb-3">
+          Campos com <Obrigatorio /> são obrigatórios.
+        </p>
 
+        {/* 1) Dados do cliente ------------------------------------------- */}
+        <p className="font-bold">
+          Seu nome: <Obrigatorio />
+        </p>
+        {/* maxLength corta no próprio campo: a pessoa não consegue passar de 30. */}
+        <input
+          type="text"
+          value={nome}
+          maxLength={NOME_MAXIMO}
+          onChange={(e) => setNome(e.target.value.slice(0, NOME_MAXIMO))}
+          placeholder="Como podemos te chamar?"
+          className={campo}
+        />
+        {erros.nome && <p className="text-red-500 text-sm">{erros.nome}</p>}
+
+        <p className="font-bold mt-2">
+          Telefone / WhatsApp: <Obrigatorio />
+        </p>
+        {/* A máscara roda a cada tecla: descarta letras/símbolos e trava em 11
+            dígitos, então não dá pra digitar um telefone maior que o real.
+            inputMode="numeric" abre o teclado numérico no celular. */}
+        <input
+          type="tel"
+          inputMode="numeric"
+          value={telefone}
+          onChange={(e) => setTelefone(formatarTelefone(e.target.value))}
+          placeholder="(15) 99999-8888"
+          className={campo}
+        />
+        {erros.telefone && <p className="text-red-500 text-sm">{erros.telefone}</p>}
+
+        {/* 2) Entrega x Retirada + endereço ------------------------------- */}
+        <p className="font-bold mt-4">Como você quer receber?</p>
+        <div className="flex gap-2 mt-1">
+          <button
+            type="button"
+            onClick={() => setTipoEntrega("ENTREGA")}
+            className={opcaoBtn(tipoEntrega === "ENTREGA")}
+          >
+            🛵 Entrega
+          </button>
+          <button
+            type="button"
+            onClick={() => setTipoEntrega("RETIRADA")}
+            className={opcaoBtn(tipoEntrega === "RETIRADA")}
+          >
+            🏠 Retirada
+          </button>
+        </div>
+
+        {/* Endereço aparece só na Entrega */}
+        {tipoEntrega === "ENTREGA" && (
+          <>
+            <p className="font-bold mt-3">Endereço de entrega:</p>
+
+            <input
+              type="text"
+              inputMode="numeric"
+              value={cep}
+              onChange={(e) => setCep(formatarCep(e.target.value))}
+              placeholder="CEP *"
+              className={campo}
+            />
+            {erros.cep && <p className="text-red-500 text-sm">{erros.cep}</p>}
+
+            <input
+              type="text"
+              value={endereco}
+              onChange={(e) => setEndereco(e.target.value)}
+              placeholder="Rua / Avenida *"
+              maxLength={120}
+              className={campo}
+            />
+            {erros.endereco && (
+              <p className="text-red-500 text-sm">{erros.endereco}</p>
+            )}
+
+            {/* Número e bairro dividem a linha: número é curto, bairro é longo.
+                grid-cols-3 dá 1/3 pro número e 2/3 pro bairro. */}
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <input
+                  type="text"
+                  value={numeroEndereco}
+                  onChange={(e) => setNumeroEndereco(e.target.value)}
+                  placeholder="Nº *"
+                  maxLength={10}
+                  className={campo}
+                />
+                {erros.numeroEndereco && (
+                  <p className="text-red-500 text-sm">{erros.numeroEndereco}</p>
+                )}
+              </div>
+              <div className="col-span-2">
+                <input
+                  type="text"
+                  value={bairro}
+                  onChange={(e) => setBairro(e.target.value)}
+                  placeholder="Bairro *"
+                  maxLength={60}
+                  className={campo}
+                />
+                {erros.bairro && (
+                  <p className="text-red-500 text-sm">{erros.bairro}</p>
+                )}
+              </div>
+            </div>
+
+            <input
+              type="text"
+              value={cidade}
+              onChange={(e) => setCidade(e.target.value)}
+              placeholder="Cidade *"
+              maxLength={60}
+              className={campo}
+            />
+            {erros.cidade && <p className="text-red-500 text-sm">{erros.cidade}</p>}
+
+            <input
+              type="text"
+              value={complemento}
+              onChange={(e) => setComplemento(e.target.value)}
+              placeholder="Complemento / referência (opcional)"
+              maxLength={60}
+              className={campo}
+            />
+          </>
+        )}
+        {tipoEntrega === "RETIRADA" && (
+          <p className="text-sm text-zinc-500 mt-2">
+            Você retira na loja: Alameda Celidônio do Monte, 757 · Sorocaba - SP
+          </p>
+        )}
+
+        {/* 3) Itens do carrinho ------------------------------------------ */}
+        <p className="font-bold mt-4">Seu pedido:</p>
         {items.length === 0 ? (
-          <p className="text-center text-zinc-500 py-8">
+          <p className="text-center text-zinc-500 py-6">
             Seu carrinho está vazio. Escolha um salgado pra começar!
           </p>
         ) : (
@@ -194,128 +345,7 @@ export default function CartModal({
           </p>
         )}
 
-        {/* Dados do cliente */}
-        <p className="font-bold mt-4">Seu nome:</p>
-        {/* maxLength corta no próprio campo: a pessoa não consegue passar de 30. */}
-        <input
-          type="text"
-          value={nome}
-          maxLength={NOME_MAXIMO}
-          onChange={(e) => setNome(e.target.value.slice(0, NOME_MAXIMO))}
-          placeholder="Como podemos te chamar?"
-          className="w-full border-2 p-1 rounded my-1 outline-none focus:border-green-600"
-        />
-        {erros.nome && <p className="text-red-500 text-sm">{erros.nome}</p>}
-
-        <p className="font-bold mt-2">Telefone / WhatsApp:</p>
-        {/* A máscara roda a cada tecla: descarta letras/símbolos e trava em 11
-            dígitos, então não dá pra digitar um telefone maior que o real.
-            inputMode="numeric" abre o teclado numérico no celular. */}
-        <input
-          type="tel"
-          inputMode="numeric"
-          value={telefone}
-          onChange={(e) => setTelefone(formatarTelefone(e.target.value))}
-          placeholder="(15) 99999-8888"
-          className="w-full border-2 p-1 rounded my-1 outline-none focus:border-green-600"
-        />
-        {erros.telefone && <p className="text-red-500 text-sm">{erros.telefone}</p>}
-
-        {/* Entrega x Retirada */}
-        <p className="font-bold mt-4">Como você quer receber?</p>
-        <div className="flex gap-2 mt-1">
-          <button
-            type="button"
-            onClick={() => setTipoEntrega("ENTREGA")}
-            className={opcaoBtn(tipoEntrega === "ENTREGA")}
-          >
-            🛵 Entrega
-          </button>
-          <button
-            type="button"
-            onClick={() => setTipoEntrega("RETIRADA")}
-            className={opcaoBtn(tipoEntrega === "RETIRADA")}
-          >
-            🏠 Retirada
-          </button>
-        </div>
-
-        {/* Endereço aparece só na Entrega */}
-        {tipoEntrega === "ENTREGA" && (
-          <>
-            <p className="font-bold mt-3">Endereço de entrega:</p>
-
-            <input
-              type="text"
-              value={endereco}
-              onChange={(e) => setEndereco(e.target.value)}
-              placeholder="Rua / Avenida"
-              className={campoEndereco}
-            />
-            {erros.endereco && (
-              <p className="text-red-500 text-sm">{erros.endereco}</p>
-            )}
-
-            {/* Número e bairro dividem a linha: número é curto, bairro é longo.
-                grid-cols-3 dá 1/3 pro número e 2/3 pro bairro. */}
-            <div className="grid grid-cols-3 gap-2">
-              <div>
-                <input
-                  type="text"
-                  value={numeroEndereco}
-                  onChange={(e) => setNumeroEndereco(e.target.value)}
-                  placeholder="Nº"
-                  maxLength={10}
-                  className={campoEndereco}
-                />
-                {erros.numeroEndereco && (
-                  <p className="text-red-500 text-sm">{erros.numeroEndereco}</p>
-                )}
-              </div>
-              <div className="col-span-2">
-                <input
-                  type="text"
-                  value={bairro}
-                  onChange={(e) => setBairro(e.target.value)}
-                  placeholder="Bairro"
-                  maxLength={60}
-                  className={campoEndereco}
-                />
-                {erros.bairro && (
-                  <p className="text-red-500 text-sm">{erros.bairro}</p>
-                )}
-              </div>
-            </div>
-
-            <input
-              type="text"
-              value={cidade}
-              onChange={(e) => setCidade(e.target.value)}
-              placeholder="Cidade"
-              maxLength={60}
-              className={campoEndereco}
-            />
-            {erros.cidade && (
-              <p className="text-red-500 text-sm">{erros.cidade}</p>
-            )}
-
-            <input
-              type="text"
-              value={complemento}
-              onChange={(e) => setComplemento(e.target.value)}
-              placeholder="Complemento / referência (opcional)"
-              maxLength={60}
-              className={campoEndereco}
-            />
-          </>
-        )}
-        {tipoEntrega === "RETIRADA" && (
-          <p className="text-sm text-zinc-500 mt-2">
-            Você retira na loja: Alameda Celidônio do Monte, 757 · Sorocaba - SP
-          </p>
-        )}
-
-        {/* Forma de pagamento */}
+        {/* 4) Forma de pagamento ----------------------------------------- */}
         <p className="font-bold mt-4">Forma de pagamento:</p>
         <div className="flex gap-2 mt-1">
           <button
@@ -345,7 +375,7 @@ export default function CartModal({
               value={trocoPara}
               onChange={(e) => setTrocoPara(e.target.value)}
               placeholder="Ex.: 50"
-              className="w-full border-2 p-1 rounded my-1 outline-none focus:border-green-600"
+              className={campo}
             />
             {erros.trocoPara && (
               <p className="text-red-500 text-sm">{erros.trocoPara}</p>

@@ -18,6 +18,7 @@ export interface CriarPedidoInput {
   numeroEndereco?: string;
   bairro?: string;
   cidade?: string;
+  cep?: string;
   complemento?: string;
   formaPagamento: FormaPagamento;
   trocoPara?: number; // só no DINHEIRO
@@ -86,6 +87,7 @@ export interface Pedido {
   numeroEndereco: string | null;
   bairro: string | null;
   cidade: string | null;
+  cep: string | null;
   complemento: string | null;
   formaPagamento: FormaPagamento;
   trocoPara: number | null;

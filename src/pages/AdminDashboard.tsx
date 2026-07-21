@@ -41,7 +41,7 @@ function formatarEndereco(pedido: Pedido): string {
     .filter(Boolean)
     .join(", ");
   const bairroCidade = [pedido.bairro, pedido.cidade].filter(Boolean).join(" - ");
-  const base = [ruaNumero, bairroCidade].filter(Boolean).join(" · ");
+  const base = [ruaNumero, bairroCidade, pedido.cep].filter(Boolean).join(" · ");
   return pedido.complemento ? `${base} (${pedido.complemento})` : base || "-";
 }
 
