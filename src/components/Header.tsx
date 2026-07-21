@@ -1,13 +1,76 @@
+import { useState } from "react";
 import logo from "../assets/valsalgadoslogo.png";
 import fundo from "../assets/fundo.png";
 import { LOJA, linkWhatsappSuporte } from "../config/loja";
 
 export default function Header() {
+  // Feedback curto do "Compartilhar" quando caímos no plano B (copiar link).
+  const [copiado, setCopiado] = useState(false);
+
+  async function compartilhar() {
+    const url = window.location.origin;
+    const dados = {
+      title: LOJA.nome,
+      text: `Olha o cardápio da ${LOJA.nome}!`,
+      url,
+    };
+
+    // navigator.share é o menu nativo de compartilhar (WhatsApp, Instagram,
+    // etc.). Existe na maioria dos celulares, mas quase não existe no
+    // computador — por isso o plano B de copiar o link.
+    if (navigator.share) {
+      try {
+        await navigator.share(dados);
+      } catch {
+        // A pessoa fechou o menu de compartilhar. Não é erro, ignoramos.
+      }
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    } catch {
+      // Alguns navegadores bloqueiam a área de transferência sem HTTPS.
+    }
+  }
+
+  const botaoCanto =
+    "inline-flex items-center gap-1.5 bg-black/45 hover:bg-black/65 " +
+    "text-white text-sm font-medium px-3 py-1.5 rounded-lg duration-200 " +
+    "backdrop-blur-sm";
+
   return (
     <header
-      className="w-full h-[420px] bg-zinc-900 bg-cover bg-center"
+      // `relative` ancora os botões nos cantos.
+      className="relative w-full h-[420px] bg-zinc-900 bg-cover bg-center"
       style={{ backgroundImage: `url(${fundo})` }}
     >
+      {/* Canto superior esquerdo: suporte. Discreto de propósito — o pedido é
+          feito aqui no site; o WhatsApp é só pra tirar dúvida. */}
+      <a
+        href={linkWhatsappSuporte()}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Falar com a loja no WhatsApp"
+        className={`absolute top-3 left-3 z-10 ${botaoCanto}`}
+      >
+        <i className="fa-brands fa-whatsapp text-base" />
+        Fale com a loja
+      </a>
+
+      {/* Canto superior direito: compartilhar o cardápio. */}
+      <button
+        type="button"
+        onClick={compartilhar}
+        aria-label="Compartilhar o cardápio"
+        className={`absolute top-3 right-3 z-10 ${botaoCanto}`}
+      >
+        <i className="fa fa-share-nodes text-base" />
+        {copiado ? "Link copiado!" : "Compartilhar"}
+      </button>
+
       <div className="w-full h-full flex flex-col justify-center items-center">
         <img
           src={logo}
@@ -19,20 +82,6 @@ export default function Header() {
         <div className="bg-green-600 px-4 py-1 rounded-lg mt-5">
           <span className="text-white font-medium">{LOJA.horario}</span>
         </div>
-
-        {/* Suporte: abre a conversa com a loja no WhatsApp.
-            target="_blank" + rel="noopener noreferrer" = abre em nova aba sem
-            dar à outra página acesso a esta (boa prática de segurança). */}
-        <a
-          href={linkWhatsappSuporte()}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Falar com a loja no WhatsApp"
-          className="mt-3 inline-flex items-center gap-2 bg-white/95 hover:bg-white text-green-700 font-bold px-4 py-2 rounded-lg shadow duration-200 hover:scale-105"
-        >
-          <i className="fa-brands fa-whatsapp text-xl" />
-          Falar com a loja
-        </a>
       </div>
     </header>
   );

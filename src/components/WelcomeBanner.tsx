@@ -5,9 +5,10 @@ export default function WelcomeBanner() {
         Seja bem-vindo(a) à Val Salgados
       </h2>
       <p className="mt-2 text-zinc-600">
-        Salgados fresquinhos, assados e fritos, por encomenda! Monte seu pedido e
-        envie direto pelo WhatsApp.
+        Há mais de 10 anos entregamos salgados fresquinhos, crocantes, assados ou
+        fritos e cheios de sabor.
       </p>
+      <p className="mt-2 text-zinc-600">Monte o seu pedido aqui e nos envie</p>
     </section>
   );
 }
