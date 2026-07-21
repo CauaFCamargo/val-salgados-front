@@ -31,6 +31,15 @@ export default function App() {
     useCart();
   const { message, showToast } = useToast();
 
+  // Mapa { idDoProduto: quantidade } pra cada card do cardápio saber quantas
+  // unidades já estão no carrinho. Vira objeto uma vez só, em vez de cada card
+  // ter que varrer a lista de itens.
+  const quantidades = useMemo(() => {
+    const mapa: Record<string, number> = {};
+    for (const item of items) mapa[item.id] = item.qty;
+    return mapa;
+  }, [items]);
+
   // Filtra os produtos pela busca (memoizado para não refiltrar à toa).
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -104,7 +113,12 @@ export default function App() {
       <WelcomeBanner />
       <SearchBar value={query} onChange={setQuery} />
       <CategoryNav activeId={activeId} onSelect={handleNavigate} />
-      <Menu products={filtered} query={query} onAdd={handleAdd} />
+      <Menu
+        products={filtered}
+        query={query}
+        onAdd={handleAdd}
+        quantidades={quantidades}
+      />
       <CartFooter count={count} onOpen={() => setModalOpen(true)} />
       <CartModal
         open={modalOpen}

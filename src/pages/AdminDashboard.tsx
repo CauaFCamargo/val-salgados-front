@@ -33,6 +33,18 @@ const STATUS_INFO: Record<string, { label: string; cor: string }> = {
 // Status que ainda exigem ação da Val (aparecem no card "Pendentes").
 const PENDENTES = ["RECEBIDO", "EM_PRODUCAO"];
 
+// Monta o endereço numa linha legível: "Rua X, 123 · Centro - Sorocaba (Apto 4)".
+// `filter(Boolean)` descarta os campos vazios, então pedidos antigos (feitos
+// antes dos campos separados existirem) continuam aparecendo direito.
+function formatarEndereco(pedido: Pedido): string {
+  const ruaNumero = [pedido.endereco, pedido.numeroEndereco]
+    .filter(Boolean)
+    .join(", ");
+  const bairroCidade = [pedido.bairro, pedido.cidade].filter(Boolean).join(" - ");
+  const base = [ruaNumero, bairroCidade].filter(Boolean).join(" · ");
+  return pedido.complemento ? `${base} (${pedido.complemento})` : base || "-";
+}
+
 function formatarHora(iso: string): string {
   return new Date(iso).toLocaleString("pt-BR", {
     day: "2-digit",
@@ -279,7 +291,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                     </p>
                     <p className="text-zinc-600">
                       {pedido.tipoEntrega === "ENTREGA"
-                        ? `🛵 Entrega: ${pedido.endereco ?? "-"}`
+                        ? `🛵 Entrega: ${formatarEndereco(pedido)}`
                         : "🏠 Retirada na loja"}
                     </p>
                     <p className="text-zinc-600">

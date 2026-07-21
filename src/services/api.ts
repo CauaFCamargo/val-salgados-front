@@ -12,8 +12,12 @@ export interface CriarPedidoInput {
   clienteNome: string;
   telefone: string;
   tipoEntrega: TipoEntrega;
-  endereco?: string; // opcional: na RETIRADA não tem endereço
+  // Todos opcionais aqui porque na RETIRADA não se pede endereço.
+  // Na ENTREGA, rua/número/bairro/cidade são exigidos (front e API validam).
+  endereco?: string; // rua / logradouro
+  numeroEndereco?: string;
   bairro?: string;
+  cidade?: string;
   complemento?: string;
   formaPagamento: FormaPagamento;
   trocoPara?: number; // só no DINHEIRO
@@ -76,7 +80,9 @@ export interface Pedido {
   telefone: string;
   tipoEntrega: TipoEntrega;
   endereco: string | null;
+  numeroEndereco: string | null;
   bairro: string | null;
+  cidade: string | null;
   complemento: string | null;
   formaPagamento: FormaPagamento;
   trocoPara: number | null;

@@ -42,7 +42,13 @@ export default function CartModal({
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
   const [tipoEntrega, setTipoEntrega] = useState<TipoEntrega>("ENTREGA");
-  const [endereco, setEndereco] = useState("");
+  const [endereco, setEndereco] = useState(""); // rua / logradouro
+  const [numeroEndereco, setNumeroEndereco] = useState("");
+  const [bairro, setBairro] = useState("");
+  // Pré-preenchido porque a esmagadora maioria dos clientes é da cidade da
+  // loja. Continua editável pra quem for de fora.
+  const [cidade, setCidade] = useState("Sorocaba");
+  const [complemento, setComplemento] = useState("");
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>("PIX");
   const [trocoPara, setTrocoPara] = useState(""); // texto do input; convertido na hora
   // Um erro por campo: { nome: "...", endereco: "..." }
@@ -68,8 +74,13 @@ export default function CartModal({
       novosErros.minimo = `O pedido mínimo é de ${PEDIDO_MINIMO_UNIDADES} unidades.`;
     }
     // Endereço só é obrigatório quando for ENTREGA (mesma regra do backend).
-    if (tipoEntrega === "ENTREGA" && !endereco.trim()) {
-      novosErros.endereco = "Endereço é obrigatório para entrega.";
+    // Na entrega, cada campo do endereço tem seu próprio erro — assim a pessoa
+    // vê exatamente o que faltou em vez de um aviso genérico.
+    if (tipoEntrega === "ENTREGA") {
+      if (!endereco.trim()) novosErros.endereco = "Informe a rua.";
+      if (!numeroEndereco.trim()) novosErros.numeroEndereco = "Informe o número.";
+      if (!bairro.trim()) novosErros.bairro = "Informe o bairro.";
+      if (!cidade.trim()) novosErros.cidade = "Informe a cidade.";
     }
 
     // Troco: se o cliente digitou um valor, ele precisa cobrir o total.
@@ -88,11 +99,25 @@ export default function CartModal({
       clienteNome: nome.trim(),
       telefone: telefone.trim(),
       tipoEntrega,
-      endereco: tipoEntrega === "ENTREGA" ? endereco.trim() : undefined,
+      // Na retirada nada de endereço é enviado.
+      ...(tipoEntrega === "ENTREGA"
+        ? {
+            endereco: endereco.trim(),
+            numeroEndereco: numeroEndereco.trim(),
+            bairro: bairro.trim(),
+            cidade: cidade.trim(),
+            // Complemento é opcional: manda só se preenchido.
+            complemento: complemento.trim() || undefined,
+          }
+        : {}),
       formaPagamento,
       trocoPara: formaPagamento === "DINHEIRO" ? trocoNum : undefined,
     });
   };
+
+  // Estilo repetido dos campos de endereço, num lugar só.
+  const campoEndereco =
+    "w-full border-2 p-1 rounded my-1 outline-none focus:border-green-600";
 
   // Botão de um seletor "segmentado" (Entrega/Retirada, PIX/Dinheiro).
   const opcaoBtn = (ativo: boolean) =>
@@ -219,16 +244,69 @@ export default function CartModal({
         {tipoEntrega === "ENTREGA" && (
           <>
             <p className="font-bold mt-3">Endereço de entrega:</p>
+
             <input
               type="text"
               value={endereco}
               onChange={(e) => setEndereco(e.target.value)}
-              placeholder="Digite seu endereço completo..."
-              className="w-full border-2 p-1 rounded my-1 outline-none focus:border-green-600"
+              placeholder="Rua / Avenida"
+              className={campoEndereco}
             />
             {erros.endereco && (
               <p className="text-red-500 text-sm">{erros.endereco}</p>
             )}
+
+            {/* Número e bairro dividem a linha: número é curto, bairro é longo.
+                grid-cols-3 dá 1/3 pro número e 2/3 pro bairro. */}
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <input
+                  type="text"
+                  value={numeroEndereco}
+                  onChange={(e) => setNumeroEndereco(e.target.value)}
+                  placeholder="Nº"
+                  maxLength={10}
+                  className={campoEndereco}
+                />
+                {erros.numeroEndereco && (
+                  <p className="text-red-500 text-sm">{erros.numeroEndereco}</p>
+                )}
+              </div>
+              <div className="col-span-2">
+                <input
+                  type="text"
+                  value={bairro}
+                  onChange={(e) => setBairro(e.target.value)}
+                  placeholder="Bairro"
+                  maxLength={60}
+                  className={campoEndereco}
+                />
+                {erros.bairro && (
+                  <p className="text-red-500 text-sm">{erros.bairro}</p>
+                )}
+              </div>
+            </div>
+
+            <input
+              type="text"
+              value={cidade}
+              onChange={(e) => setCidade(e.target.value)}
+              placeholder="Cidade"
+              maxLength={60}
+              className={campoEndereco}
+            />
+            {erros.cidade && (
+              <p className="text-red-500 text-sm">{erros.cidade}</p>
+            )}
+
+            <input
+              type="text"
+              value={complemento}
+              onChange={(e) => setComplemento(e.target.value)}
+              placeholder="Complemento / referência (opcional)"
+              maxLength={60}
+              className={campoEndereco}
+            />
           </>
         )}
         {tipoEntrega === "RETIRADA" && (

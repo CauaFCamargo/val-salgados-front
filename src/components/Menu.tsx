@@ -6,9 +6,11 @@ interface MenuProps {
   products: Product[];
   query: string;
   onAdd: (product: Product) => void;
+  // { idDoProduto: quantidade no carrinho } — usado pro selo de quantidade.
+  quantidades: Record<string, number>;
 }
 
-export default function Menu({ products, query, onAdd }: MenuProps) {
+export default function Menu({ products, query, onAdd, quantidades }: MenuProps) {
   const isEmpty = products.length === 0;
 
   return (
@@ -24,6 +26,7 @@ export default function Menu({ products, query, onAdd }: MenuProps) {
             category={category}
             products={products.filter((p) => p.category === category.id)}
             onAdd={onAdd}
+            quantidades={quantidades}
           />
         ))
       )}
