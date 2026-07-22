@@ -16,21 +16,26 @@ interface AdminDashboardProps {
 // Qual é o próximo status ao clicar "Avançar". Se não estiver no mapa
 // (ENTREGUE/CANCELADO), não há próximo — o pedido chegou ao fim.
 const PROXIMO_STATUS: Record<string, string | undefined> = {
-  RECEBIDO: "EM_PRODUCAO",
-  EM_PRODUCAO: "PRONTO",
+  RECEBIDO: "PRONTO",
   PRONTO: "ENTREGUE",
+  // Legado: a etapa "Em produção" foi removida do fluxo, mas pedidos que já
+  // estavam nela precisam continuar avançando normalmente.
+  EM_PRODUCAO: "PRONTO",
 };
 
 // Rótulos e cores amigáveis pra cada status.
 const STATUS_INFO: Record<string, { label: string; cor: string }> = {
   RECEBIDO: { label: "Recebido", cor: "bg-blue-100 text-blue-700" },
-  EM_PRODUCAO: { label: "Em produção", cor: "bg-amber-100 text-amber-700" },
   PRONTO: { label: "Pronto", cor: "bg-green-100 text-green-700" },
   ENTREGUE: { label: "Entregue", cor: "bg-zinc-200 text-zinc-600" },
   CANCELADO: { label: "Cancelado", cor: "bg-red-100 text-red-700" },
+  // Legado: mantido só pra pedidos antigos continuarem exibindo um rótulo
+  // legível. Nenhum pedido novo entra nesse status.
+  EM_PRODUCAO: { label: "Em produção", cor: "bg-amber-100 text-amber-700" },
 };
 
-// Status que ainda exigem ação da Val (aparecem no card "Pendentes").
+// Status que ainda exigem ação do Val (aparecem no card "Pendentes").
+// EM_PRODUCAO entra pelo mesmo motivo legado acima.
 const PENDENTES = ["RECEBIDO", "EM_PRODUCAO"];
 
 // Monta o endereço numa linha legível: "Rua X, 123 · Centro - Sorocaba (Apto 4)".
@@ -102,19 +107,14 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
   }, [pedidos, dia, verTodos]);
 
   // Os números do topo, calculados sempre em cima do que está visível.
-  const resumo = useMemo(() => {
-    // Cancelado não conta como faturamento (o dinheiro não entrou).
-    const faturamento = visiveis
-      .filter((p) => p.status !== "CANCELADO")
-      .reduce((soma, p) => soma + p.total, 0);
-
-    return {
+  const resumo = useMemo(
+    () => ({
       quantidade: visiveis.length,
-      faturamento,
       pendentes: visiveis.filter((p) => PENDENTES.includes(p.status)).length,
       naoImpressos: visiveis.filter((p) => !p.impresso).length,
-    };
-  }, [visiveis]);
+    }),
+    [visiveis]
+  );
 
   const mudarStatus = async (pedido: Pedido, novoStatus: string) => {
     try {
@@ -204,16 +204,10 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
         {erro && <p className="text-red-500 mb-4">{erro}</p>}
 
         {/* Cards de resumo — sempre sobre o período selecionado */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+        <div className="grid grid-cols-3 gap-3 mb-5">
           <div className="bg-white rounded-lg shadow-sm p-3">
             <p className="text-xs text-zinc-500">Pedidos</p>
             <p className="font-bold text-2xl">{resumo.quantidade}</p>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm p-3">
-            <p className="text-xs text-zinc-500">Faturamento</p>
-            <p className="font-bold text-2xl text-green-700">
-              {formatCurrency(resumo.faturamento)}
-            </p>
           </div>
           <div className="bg-white rounded-lg shadow-sm p-3">
             <p className="text-xs text-zinc-500">Pendentes</p>

@@ -341,7 +341,7 @@ export default function CartModal({
         {items.length > 0 && !atingiuMinimo && (
           <p className="mt-2 text-sm bg-amber-50 text-amber-800 border border-amber-200 rounded p-2">
             Pedido mínimo de {PEDIDO_MINIMO_UNIDADES} unidades — faltam{" "}
-            <strong>{faltam}</strong>. Pode misturar os salgados que quiser!
+            <strong>{faltam}</strong>.
           </p>
         )}
 

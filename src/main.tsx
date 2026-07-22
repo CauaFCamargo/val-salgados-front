@@ -12,7 +12,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
       <Routes>
         {/* Loja do cliente (público) */}
         <Route path="/" element={<App />} />
-        {/* Painel da Val (login + dashboard) */}
+        {/* Painel do Val (login + dashboard) */}
         <Route path="/admin" element={<AdminPage />} />
         {/* Acompanhamento público do pedido */}
         {/* O parâmetro é o TOKEN do pedido, não o número: o número é

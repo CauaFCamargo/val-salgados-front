@@ -31,7 +31,7 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
         onSubmit={handleSubmit}
         className="bg-white p-6 rounded-lg shadow w-full max-w-sm"
       >
-        <h1 className="text-2xl font-bold text-center">Painel da Val</h1>
+        <h1 className="text-2xl font-bold text-center">Painel do Val</h1>
         <p className="text-center text-zinc-500 text-sm mt-1">
           Acesso restrito à administração
         </p>

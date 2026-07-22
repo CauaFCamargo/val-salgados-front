@@ -6,7 +6,6 @@ import { formatCurrency } from "../utils/format";
 // As etapas na ordem do fluxo. A barra marca até onde o pedido já chegou.
 const ETAPAS = [
   { id: "RECEBIDO", label: "Recebido" },
-  { id: "EM_PRODUCAO", label: "Em produção" },
   { id: "PRONTO", label: "Pronto" },
   { id: "ENTREGUE", label: "Entregue" },
 ];
