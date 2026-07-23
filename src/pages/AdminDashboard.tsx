@@ -129,10 +129,10 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
     }
   };
 
-  // "Reimprimir" não imprime daqui: o navegador não enxerga a impressora da
-  // loja. A gente só devolve o pedido pra fila (impresso = false) e o agente
-  // local, que fica consultando a API, imprime no próximo ciclo.
-  const reimprimir = async (pedido: Pedido) => {
+  // "Imprimir" não imprime a partir do navegador — ele não enxerga a impressora
+  // da loja. A gente só põe o pedido na fila (impresso = false); o agente local,
+  // que fica consultando a API, imprime no próximo ciclo e devolve pra true.
+  const enviarParaImpressao = async (pedido: Pedido) => {
     try {
       await definirImpresso(token, pedido.id, false);
       setPedidos((prev) =>
@@ -216,7 +216,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
             </p>
           </div>
           <div className="bg-white rounded-lg shadow-sm p-3">
-            <p className="text-xs text-zinc-500">Não impressos</p>
+            <p className="text-xs text-zinc-500">Na fila</p>
             <p className="font-bold text-2xl text-blue-700">
               {resumo.naoImpressos}
             </p>
@@ -255,22 +255,16 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      {/* Estado da impressão: quem imprime é o agente local. */}
-                      <span
-                        className={
-                          "text-xs font-medium px-2 py-1 rounded-full " +
-                          (pedido.impresso
-                            ? "bg-zinc-100 text-zinc-500"
-                            : "bg-blue-100 text-blue-700")
-                        }
-                        title={
-                          pedido.impresso
-                            ? "Cupom já impresso"
-                            : "Na fila do agente de impressão"
-                        }
-                      >
-                        🖨️ {pedido.impresso ? "Impresso" : "Na fila"}
-                      </span>
+                      {/* Só mostra selo quando está NA FILA (impresso=false);
+                          fora da fila é o estado normal, sem poluir o card. */}
+                      {!pedido.impresso && (
+                        <span
+                          className="text-xs font-medium px-2 py-1 rounded-full bg-blue-100 text-blue-700"
+                          title="Na fila — o agente vai imprimir no próximo ciclo"
+                        >
+                          🖨️ Na fila
+                        </span>
+                      )}
                       <span
                         className={`text-xs font-medium px-2 py-1 rounded-full ${info.cor}`}
                       >
@@ -317,15 +311,16 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                       Total: {formatCurrency(pedido.total)}
                     </span>
                     <div className="flex gap-2">
-                      {/* Só faz sentido reenviar pra fila o que já foi impresso. */}
-                      {pedido.impresso && (
-                        <button
-                          onClick={() => reimprimir(pedido)}
-                          className="text-sm border-2 border-zinc-200 hover:border-zinc-300 rounded px-3 py-1.5 duration-200"
-                        >
-                          🖨️ Reimprimir
-                        </button>
-                      )}
+                      {/* Impressão manual: sempre disponível. Enquanto está na
+                          fila (impresso=false) fica desabilitado, pra não pedir
+                          impressão duas vezes antes do agente pegar. */}
+                      <button
+                        onClick={() => enviarParaImpressao(pedido)}
+                        disabled={!pedido.impresso}
+                        className="text-sm border-2 border-zinc-200 hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed rounded px-3 py-1.5 duration-200"
+                      >
+                        {pedido.impresso ? "🖨️ Imprimir" : "🖨️ Na fila…"}
+                      </button>
                       {!finalizado && (
                         <>
                           <button
