@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   listarPedidos,
   atualizarStatus,
-  definirImpresso,
+  definirFilaImpressao,
   SessaoExpiradaError,
   type Pedido,
 } from "../services/api";
@@ -111,7 +111,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
     () => ({
       quantidade: visiveis.length,
       pendentes: visiveis.filter((p) => PENDENTES.includes(p.status)).length,
-      naoImpressos: visiveis.filter((p) => !p.impresso).length,
+      naFila: visiveis.filter((p) => p.filaCliente || p.filaLoja).length,
     }),
     [visiveis]
   );
@@ -129,18 +129,26 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
     }
   };
 
-  // "Imprimir" não imprime a partir do navegador — ele não enxerga a impressora
-  // da loja. A gente só põe o pedido na fila (impresso = false); o agente local,
-  // que fica consultando a API, imprime no próximo ciclo e devolve pra true.
-  const enviarParaImpressao = async (pedido: Pedido) => {
+  // Imprimir NÃO imprime a partir do navegador — ele não enxerga a impressora
+  // da loja. A gente só põe a via escolhida na fila; o agente local, que fica
+  // consultando a API, imprime no próximo ciclo e dá baixa sozinho.
+  const enviarViaParaImpressao = async (pedido: Pedido, via: "cliente" | "loja") => {
     try {
-      await definirImpresso(token, pedido.id, false);
+      await definirFilaImpressao(token, pedido.id, { [via]: true });
       setPedidos((prev) =>
-        prev.map((p) => (p.id === pedido.id ? { ...p, impresso: false } : p))
+        prev.map((p) =>
+          p.id === pedido.id
+            ? {
+                ...p,
+                filaCliente: via === "cliente" ? true : p.filaCliente,
+                filaLoja: via === "loja" ? true : p.filaLoja,
+              }
+            : p
+        )
       );
     } catch (err) {
       if (err instanceof SessaoExpiradaError) onLogout();
-      else setErro("Não foi possível enviar o pedido pra impressão.");
+      else setErro("Não foi possível enviar a via pra impressão.");
     }
   };
 
@@ -218,7 +226,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
           <div className="bg-white rounded-lg shadow-sm p-3">
             <p className="text-xs text-zinc-500">Na fila</p>
             <p className="font-bold text-2xl text-blue-700">
-              {resumo.naoImpressos}
+              {resumo.naFila}
             </p>
           </div>
         </div>
@@ -255,14 +263,19 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      {/* Só mostra selo quando está NA FILA (impresso=false);
-                          fora da fila é o estado normal, sem poluir o card. */}
-                      {!pedido.impresso && (
+                      {/* Selo só quando alguma via está na fila (estado
+                          transitório até o agente imprimir). Diz qual via. */}
+                      {(pedido.filaCliente || pedido.filaLoja) && (
                         <span
                           className="text-xs font-medium px-2 py-1 rounded-full bg-blue-100 text-blue-700"
                           title="Na fila — o agente vai imprimir no próximo ciclo"
                         >
                           🖨️ Na fila
+                          {pedido.filaCliente && pedido.filaLoja
+                            ? " (2 vias)"
+                            : pedido.filaCliente
+                            ? " (cliente)"
+                            : " (loja)"}
                         </span>
                       )}
                       <span
@@ -310,16 +323,23 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                     <span className="font-bold">
                       Total: {formatCurrency(pedido.total)}
                     </span>
-                    <div className="flex gap-2">
-                      {/* Impressão manual: sempre disponível. Enquanto está na
-                          fila (impresso=false) fica desabilitado, pra não pedir
-                          impressão duas vezes antes do agente pegar. */}
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      {/* Impressão manual por via: um botão pra cada. Enquanto
+                          a via está na fila, o botão fica desabilitado, pra não
+                          pedir a mesma via duas vezes antes do agente pegar. */}
                       <button
-                        onClick={() => enviarParaImpressao(pedido)}
-                        disabled={!pedido.impresso}
+                        onClick={() => enviarViaParaImpressao(pedido, "cliente")}
+                        disabled={pedido.filaCliente}
                         className="text-sm border-2 border-zinc-200 hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed rounded px-3 py-1.5 duration-200"
                       >
-                        {pedido.impresso ? "🖨️ Imprimir" : "🖨️ Na fila…"}
+                        {pedido.filaCliente ? "🖨️ Cliente…" : "🖨️ Via cliente"}
+                      </button>
+                      <button
+                        onClick={() => enviarViaParaImpressao(pedido, "loja")}
+                        disabled={pedido.filaLoja}
+                        className="text-sm border-2 border-zinc-200 hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed rounded px-3 py-1.5 duration-200"
+                      >
+                        {pedido.filaLoja ? "🖨️ Loja…" : "🖨️ Via loja"}
                       </button>
                       {!finalizado && (
                         <>

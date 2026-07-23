@@ -96,9 +96,10 @@ export interface Pedido {
   desconto: number;
   total: number;
   status: string;
-  // O agente de impressão local marca como true depois de imprimir o cupom.
-  // O painel pode voltar pra false pra o agente imprimir de novo.
-  impresso: boolean;
+  // Filas de impressão por via: true = a via está na fila do agente local.
+  // A Val põe true clicando no painel; o agente imprime e volta pra false.
+  filaCliente: boolean;
+  filaLoja: boolean;
   itens: ItemPedido[];
 }
 
@@ -183,21 +184,21 @@ export async function atualizarStatus(
   return resposta.json();
 }
 
-// Marca/desmarca o pedido como impresso.
-// `impresso: false` devolve o pedido pra fila do agente de impressão local,
-// que roda na máquina da loja e imprime os pedidos ainda não impressos.
-export async function definirImpresso(
+// Põe (ou tira) uma via na fila de impressão do agente local.
+// Ex.: definirFilaImpressao(token, id, { cliente: true }) manda a via do
+// cliente pra fila; o agente imprime e dá baixa sozinho.
+export async function definirFilaImpressao(
   token: string,
   id: number,
-  impresso: boolean
-): Promise<{ id: number; impresso: boolean }> {
-  const resposta = await fetch(`${API_URL}/pedidos/${id}/impresso`, {
+  vias: { cliente?: boolean; loja?: boolean }
+): Promise<{ id: number; filaCliente: boolean; filaLoja: boolean }> {
+  const resposta = await fetch(`${API_URL}/pedidos/${id}/impressao`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ impresso }),
+    body: JSON.stringify(vias),
   });
 
   if (resposta.status === 401) throw new SessaoExpiradaError();
